@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>90 Hard Challenge</title>
+    <!-- Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <style>
+        /* --- THEME VARIABLES --- */
+        :root {
+            --bg-body: #f0f2f5;
+            --bg-container: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --accent-color: #000000;
+            --accent-text: #ffffff;
+            --success-color: #059669;
+            --success-bg: #ecfdf5;
+            --success-border: #86efac;
+            --fail-color: #dc2626;
+            --checkpoint-bg: #d97706;
+            --border-color: #e5e7eb;
+            --task-bg: #fafafa;
+            --task-hover: #f3f4f6;
+            --badge-bg: #f3f4f6;
+            --input-bg: #fafafa;
+            
+            /* CLOCK SPECIFIC (Light Mode: Black BG / White Text) */
+            --clock-bg: #000000;
+            --clock-text: #ffffff;
+            
+            --shadow: 0 10px 40px rgba(0,0,0,0.08);
+            --cal-day-bg: #e5e7eb;
+            --quote-color: #374151;
+        }
+
+        /* --- DARK MODE (STRICT BLACK & WHITE) --- */
+        [data-theme="dark"] {
+            --bg-body: #000000;       /* Pure Black Body */
+            --bg-container: #121212;  /* Very Dark Gray Container */
+            --text-main: #ffffff;     /* Pure White Text */
+            --text-muted: #a3a3a3;    /* Neutral Gray */
+            
+            --accent-color: #ffffff;  /* White Accent (Buttons/Checks) */
+            --accent-text: #000000;   /* Black Text on Accents */
+            
+            --success-color: #34d399; /* Green (Kept for status) */
+            --success-bg: #064e3b;
+            --success-border: #059669;
+            --fail-color: #f87171;
+            --checkpoint-bg: #b45309;
+            
+            --border-color: #333333;  /* Neutral Dark Border */
+            --task-bg: #1e1e1e;       /* Neutral Dark Task BG */
+            --task-hover: #2d2d2d;    /* Neutral Hover */
+            --badge-bg: #262626;
+            --input-bg: #000000;
+            
+            /* CLOCK SPECIFIC (Dark Mode: White BG / Black Text) */
+            --clock-bg: #ffffff;
+            --clock-text: #000000;
+            
+            --shadow: 0 10px 40px rgba(0,0,0,0.8);
+            --cal-day-bg: #262626;
+            --quote-color: #d4d4d4;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: 
+            transparent; transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease; }
+        
+        body { 
+            margin: 0; 
+            padding: 20px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background-color: var(--bg-body); 
+            color: var(--text-main); 
+        }
+        
+        .container { 
+            background: var(--bg-container); 
+            padding: 2.5rem; 
+            border-radius: 20px; 
+            box-shadow: var(--shadow); 
+            text-align: center; 
+            width: 100%; 
+            max-width: 900px; 
+            position: relative; 
+            min-height: 50vh; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+        }
+        
+        #agreement-screen, #tracker-screen { width: 100%; }
+
+        /* --- Header & Quotes --- */
+        .theme-toggle-btn { 
+            position: absolute; 
+            top: 20px; right: 20px; 
+            background: var(--badge-bg); 
+            border: none; 
+            cursor: pointer; 
+            padding: 8px; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            color: var(--text-main); 
+            z-index: 10; }
+        .theme-toggle-btn svg { 
+            width: 24px; 
+            height: 24px; 
+            fill: none; 
+            stroke: currentColor; 
+            stroke-width: 2; 
+        }
+        
+        h1 { font-family: 'Impact', sans-serif; 
+            font-size: clamp(2.2rem, 6vw, 4rem); 
+            margin: 0 0 5px 0; 
+            text-transform: uppercase; 
+            line-height: 1.1; }
+        h1.finished { 
+            color: var(--success-color); 
+            animation: pop 0.5s ease; 
+        }
+        
+        .quote-box {
+            font-size: 1rem;
+            font-style: italic;
+            color: var(--quote-color);
+            margin: 15px auto 30px auto;
+            max-width: 90%;
+            line-height: 1.5;
+            font-weight: 500;
+            border-left: 4px solid var(--accent-color);
+            padding-left: 15px;
+            text-align: left;
+            background: var(--badge-bg);
+            padding: 15px;
+            border-radius: 0 10px 10px 0;
+        }
+
+        .subtitle { 
+            font-size: clamp(0.9rem, 3vw, 1.2rem); 
+            color: var(--text-muted); 
+            margin-bottom: 15px; 
+            font-weight: 700; 
+            text-transform: uppercase; }
+        p { 
+            font-size: 1.1rem; 
+            line-height: 1.6; 
+            margin-bottom: 2rem; 
+            max-width: 600px; 
+            margin-left: auto; 
+            margin-right: auto; }
+
+        /* --- Buttons --- */
+        button.primary-btn { 
+            background-color: var(--accent-color); 
+            color: var(--accent-text); 
+            border: none; 
+            padding: 18px 40px; 
+            font-size: 1.1rem; 
+            font-weight: bold; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            text-transform: uppercase; 
+            width: 100%; 
+            max-width: 320px; 
+            transition: transform 0.1s; }
+        button.primary-btn:active { 
+            transform: scale(0.96); 
+        }
+        button.primary-btn:disabled { 
+            opacity: 0.5; 
+            cursor: not-allowed; 
+        }
+        
+        button.secondary-btn { 
+            background-color: var(--badge-bg); 
+            color: var(--text-main); 
+            border: 1px solid 
+            var(--border-color); 
+            padding: 10px 20px; 
+            font-size: 0.9rem; 
+            font-weight: 600; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            margin-bottom: 20px; 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 8px; }
+        button.secondary-btn:hover { 
+            background-color: 
+            var(--task-hover); 
+        }
+
+        /* --- Calendar --- */
+        .calendar-drawer { 
+            max-height: 0; 
+            overflow: hidden; 
+            transition: max-height 0.6s ease-in-out, opacity 0.4s ease; 
+            opacity: 0; 
+            border-bottom: 1px solid 
+            var(--border-color); 
+            margin-bottom: 20px; width: 100%; }
+        .calendar-drawer.open { 
+            max-height: 2500px; 
+            opacity: 1; 
+            padding-bottom: 30px; }
+        .year-header { 
+            font-size: 1.5rem; 
+            font-weight: 800; 
+            margin: 30px 0 10px 0; 
+            text-align: left; 
+            border-bottom: 2px solid 
+            var(--border-color); 
+            padding-bottom: 5px; }
+        .calendar-wrapper { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); 
+            gap: 15px; 
+            margin-top: 10px; }
+        .cal-month { 
+            border: 1px solid var(--border-color); 
+            border-radius: 10px; 
+            padding: 10px; 
+            background: var(--task-bg); 
+        }
+        .cal-month-title { 
+            font-weight: bold;
+             font-size: 0.9rem; 
+            margin-bottom: 8px; 
+            color: var(--text-muted); 
+            text-transform: uppercase; }
+        .cal-grid { 
+            display: grid; 
+            grid-template-columns: repeat(7, 1fr); 
+            gap: 3px; }
+        .cal-day { 
+            aspect-ratio: 1/1; 
+            background-color: var(--cal-day-bg); 
+            border-radius: 3px; font-size: 0.65rem; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            color: var(--text-muted); 
+            position: relative; }
+        
+        .cal-day.future { 
+            background-color: transparent; 
+            border: 1px solid 
+            var(--border-color); 
+            opacity: 0.3; } 
+        .cal-day.past-inactive { 
+            opacity: 0.4; 
+        } 
+        .cal-day.success { 
+            background-color: var(--success-color); 
+            color: white; 
+            opacity: 1 !important; 
+        }
+        .cal-day.fail { 
+            background-color: var(--fail-color); 
+            color: white; 
+            opacity: 1 !important; 
+        }
+        .cal-day.today { 
+            border: 2px solid 
+            var(--accent-color); 
+            color: var(--text-main); 
+            font-weight: 900; 
+            background: var(--bg-container); 
+            opacity: 1 !important; 
+            transform: scale(1.1); 
+            z-index: 2; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+
+        /* --- Progress & Tasks --- */
+        .progress-container { 
+            width: 100%; 
+            background-color: var(--badge-bg); 
+            border-radius: 10px; 
+            height: 10px; 
+            margin: 20px 0 10px 0; 
+            overflow: hidden;
+             }
+        .progress-bar { 
+            height: 100%; 
+            background-color: var(--success-color); 
+            width: 0%; 
+            transition: width 0.4s ease-in-out; 
+        }
+        .progress-text {
+         font-size: 0.85rem;
+          font-weight: 700; 
+          color: var(--success-color);
+           margin-bottom: 25px; 
+           display: block; 
+       }
+
+        .checkbox-grid { 
+            display: grid; 
+            gap: 15px; 
+            margin-top: 10px; 
+            grid-template-columns: repeat(3, 1fr); 
+            width: 100%; 
+        }
+        @media (max-width: 820px) 
+        { 
+            .checkbox-grid { 
+                grid-template-columns: repeat(2, 1fr); 
+            } 
+        }
+        @media (max-width: 550px) 
+        { 
+            .checkbox-grid { 
+                grid-template-columns: 1fr; 
+            } 
+        }
+
+        .task-item { 
+            background: var(--task-bg); 
+            padding: 16px; 
+            border: 2px solid var(--border-color); 
+            border-radius: 12px; 
+            display: flex; 
+            align-items: center; 
+            cursor: pointer; 
+            text-align: left; 
+            color: var(--text-main); 
+        }
+        .task-item:hover { 
+            border-color: var(--text-muted); 
+            background: var(--task-hover); 
+        }
+        .task-item.completed { 
+            background-color: var(--success-bg); 
+            border-color: var(--success-border); }
+        .task-item input[type="checkbox"] { appearance: none; width: 24px; height: 24px; border: 2px solid var(--border-color); border-radius: 6px; display: grid; place-content: center; flex-shrink: 0; background: var(--bg-container); }
+        .task-item input[type="checkbox"]::before { content: ""; width: 14px; height: 14px; transform: scale(0); transition: 0.2s; box-shadow: inset 1em 1em var(--accent-text); clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%); }
+        .task-item input[type="checkbox"]:checked { background-color: var(--accent-color); border-color: var(--accent-color); }
+        .task-item input[type="checkbox"]:checked::before { transform: scale(1); }
+
+        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        /* --- Footer & Utils --- */
+        .hidden { display: none !important; }
+        .day-counter { font-size: 0.9rem; font-weight: 800; color: var(--text-main); background: var(--badge-bg); display: inline-block; padding: 6px 16px; border-radius: 20px; margin-bottom: 15px; }
+        textarea { width: 100%; height: 120px; padding: 15px; border: 2px solid var(--border-color); border-radius: 12px; font-family: inherit; font-size: 1rem; resize: vertical; background: var(--input-bg); color: var(--text-main); margin-top: 10px; }
+        textarea:focus { outline: none; border-color: var(--accent-color); }
+        .save-btn { background-color: var(--text-main); color: var(--bg-container); border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; margin-top: 12px; font-weight: 600; text-transform: uppercase; }
+        
+        .info-footer { 
+            margin-top: 40px; 
+            border-top: 1px solid var(--border-color); 
+            padding-top: 20px; 
+            color: var(--text-muted); 
+            font-size: 0.85rem; 
+            width: 100%; 
+        }
+        
+        /* COPYRIGHT & CLOCK STYLES */
+        .live-clock { 
+            font-family: monospace; 
+            font-weight: bold; 
+            font-size: 1.1rem;
+            color: var(--clock-text); 
+            background: var(--clock-bg); 
+            padding: 8px 16px; 
+            border-radius: 8px; 
+            margin: 10px 0 20px 0; 
+            display: inline-block; 
+            border: 2px solid var(--border-color);
+        }
+
+        .copyright {
+            font-family: impact;
+            font-weight: 700; /* Bold */
+            color: var(--text-main);
+            letter-spacing: 0.5px;
+            margin-top: 10px;
+        }
+
+        .reset-link { display: block; margin-top: 30px; color: var(--text-muted); text-decoration: underline; cursor: pointer; font-size: 0.85rem; }
+
+        /* Custom styles for the lock screen */
+        .lock-container {
+            margin-top: 25px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background-color: var(--badge-bg);
+        }
+        .lock-message {
+            font-size: 1.1rem;
+            color: var(--fail-color);
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .countdown-display {
+            font-size: 1.8rem;
+            font-family: monospace;
+            color: var(--accent-color);
+            margin-bottom: 20px;
+            display: block;
+        }
+        .unlock-password-input {
+            width: 100%;
+            max-width: 250px;
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--input-bg);
+            color: var(--text-main);
+            font-size: 1rem;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .unlock-password-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+        .error-message {
+            color: var(--fail-color);
+            font-size: 0.9rem;
+            margin-top: 10px;
+            display: block;
+            min-height: 20px; /* Reserve space */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <button id="theme-toggle" class="theme-toggle-btn" title="Toggle Dark Mode"></button>
+
+        <!-- AGREEMENT SCREEN -->
+        <div id="agreement-screen">
+            <h1>90 Hard Challenge</h1>
+            <div id="intro-quote" class="quote-box">Loading inspiration...</div>
+            <p>
+                By clicking start, you agree to commit to 90 days of absolute discipline.
+            </p>
+            
+            <!-- NEW LOCK/UNLOCK UI -->
+            <div id="lock-container" class="lock-container">
+                <p id="lock-message" class="lock-message hidden"></p>
+                <span id="countdown-display" class="countdown-display hidden"></span>
+                <input type="password" id="unlock-password" class="unlock-password-input hidden" placeholder="Enter Password for Early Access">
+                <span id="password-error" class="error-message hidden"></span>
+                <button class="primary-btn" id="start-button" onclick="handleStartAttempt()">I Agree & Start</button>
+            </div>
+            
+        </div>
+
+        <!-- TRACKER SCREEN -->
+        <div id="tracker-screen" class="hidden">
+            <div id="day-badge" class="day-counter">DAY 1 / 90</div>
+            
+            <h1 id="main-title">90 Hard Challenge</h1>
+            
+            <!-- QUOTE APPEARS HERE TOO -->
+            <div id="daily-quote" class="quote-box">Loading inspiration...</div>
+
+            <div id="sunday-banner" class="checkpoint-badge hidden" style="background:var(--checkpoint-bg);color:white;padding:5px 10px;border-radius:5px;margin-bottom:10px;display:inline-block;">⚠ Sunday Checkpoint ⚠</div>
+            
+            <!-- DRAWER TOGGLE -->
+            <div>
+                <button class="secondary-btn" onclick="toggleCalendar()">
+                    📅 View Yearly Progress
+                </button>
+            </div>
+
+            <!-- CALENDAR DRAWER -->
+            <div id="calendar-drawer" class="calendar-drawer">
+                <div style="margin-top:20px; font-size:0.85rem; color:var(--text-muted);">
+                    <span style="color:var(--success-color)">■ 100%</span> &nbsp;
+                    <span style="color:var(--fail-color)">■ Missed</span> &nbsp;
+                    <span style="border:2px solid var(--accent-color); padding:0 4px; font-weight:bold;">□ Today</span>
+                </div>
+                <!-- Container for Years -->
+                <div id="full-calendar-container"></div>
+            </div>
+
+            <!-- PROGRESS & GRID -->
+            <div class="progress-container"><div id="progress-bar" class="progress-bar"></div></div>
+            <span id="progress-text" class="progress-text">0% Completed</span>
+            <div class="checkbox-grid" id="grid-container"></div>
+            
+            <!-- JOURNAL -->
+            <div style="margin-top: 35px; border-top: 2px dashed var(--border-color); text-align: left; padding-top: 20px;">
+                <h3 style="color: var(--text-muted); font-size: 1rem; text-transform: uppercase;">Daily Journal</h3>
+                <textarea id="daily-note" placeholder="Write about your day..."></textarea>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <button class="save-btn" onclick="saveNote()">Save Note</button>
+                    <span id="save-msg" style="color: var(--success-color); font-size: 0.9rem; font-weight: bold; opacity: 0;">Saved!</span>
+                </div>
+            </div>
+
+            <div class="reset-link" onclick="hardReset()">I Failed. Reset to Day 1.</div>
+        </div>
+
+        <!-- SHARED FOOTER (Both Pages) -->
+        <div class="info-footer">
+            <!-- Date & Clock First -->
+            <div id="date-display"></div>
+            <div id="ist-clock" class="live-clock">Loading...</div>
+
+            <!-- Copyright Below Clock -->
+            <div class="copyright">
+                © 2025 Kalex | All rights reserved<br>
+                PROJECT 90 HARD
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIG ---
+        const TASKS = [
+            "Drink 3 Liters Water", 
+            "2hr workout", 
+            "fajar",
+            "zohar",
+            "asr",
+            "magrib",
+            "isha",
+            "Read 10 Pages holy book/any book", 
+            "fasting", 
+            "no phone 1 hour before iftar",
+            "Take Progress Photo", 
+            "Cold Shower", 
+            "Review Goals",
+            "Sleep 8+ Hours", 
+            "write a journal about your day", 
+            "learn new every day"
+        ];
+
+        // --- MASSIVE QUOTES LIST (Ordered Sequential) ---
+        const QUOTES = [
+            "The strong believer is better and more beloved to Allah than the weak believer, while there is good in both. - Prophet Muhammad (PBUH)",
+            "Speak good or remain silent. - Prophet Muhammad (PBUH)",
+            "Strive for that which will benefit you, seek the help of Allah, and do not feel helpless. - Prophet Muhammad (PBUH)",
+            "A man is not a believer who fills his stomach while his neighbour is hungry. - Prophet Muhammad (PBUH)",
+            "Whoever travels a path in search of knowledge, Allah will make easy for him a path to Paradise. - Prophet Muhammad (PBUH)",
+            "When you see a person who has been given more than you in money and beauty, look to those who have been given less. - Prophet Muhammad (PBUH)",
+            "Run away from greatness and greatness will follow you. - Abu Bakr As-Siddiq",
+            "Knowledge is the life of the mind. - Abu Bakr As-Siddiq",
+            "We are a people whom Allah has honored with Islam. If we seek honor in anything else, Allah will humiliate us. - Umar ibn Al-Khattab",
+            "Sometimes the people with the worst past create the best future. - Umar ibn Al-Khattab",
+            "Taking pains to remove the pains of others is the true essence of generosity. - Umar ibn Al-Khattab",
+            "Patience is the healthiest ingredient of our life. - Umar ibn Al-Khattab",
+            "Everything in this world has a price, but what does not have a price is the dignity of a Muslim. - Uthman ibn Affan",
+            "Do not be a slave to others when Allah has created you free. - Ali ibn Abi Talib",
+            "Detachment is not that you should own nothing, but that nothing should own you. - Ali ibn Abi Talib",
+            "See the bad inside yourself, and see the good inside others. - Ali ibn Abi Talib",
+            "The tongue is like a lion; if you let it loose, it will wound someone. - Ali ibn Abi Talib",
+            "If you are honest, you will survive. - Khalid ibn Al-Waleed",
+            "I bring you men who desire death as you desire life. - Khalid ibn Al-Waleed",
+            "Man intends one thing, but Allah intends another. - Khalid ibn Al-Waleed",
+            "Behind me is the sea, before me is the enemy. There is no retreat. - Tariq ibn Ziyad",
+            "I warn you against shedding blood, indulging in it and making a habit of it, for blood never sleeps. - Salahuddin Ayyubi",
+            "If you want to destroy any nation without war, make adultery or nudity common in the young generation. - Salahuddin Ayyubi",
+            "One day of the life of a lion is better than one hundred years of the life of a jackal. - Tipu Sultan",
+            "Either I will conquer Istanbul or Istanbul will conquer me. - Sultan Mehmed II (Al-Fateh)",
+            "Do not lose hope. Be like the sun, which sets every evening but rises again every morning. - Sultan Mehmed II (Al-Fateh)",
+            "He who is not capable of ruling his own self is not capable of ruling a state. - Sultan Suleiman the Magnificent",
+            "There is no object of fortune so blessed as a breath of health. - Sultan Suleiman the Magnificent",
+            "A carpet is large enough to accommodate two sufis, but the world is not large enough for two kings. - Sultan Selim I",
+            "So long as a single breath of this mortal life remains, there is no release from labor. - Aurangzeb Alamgir",
+            "No age is wanting in people of worth. - Aurangzeb Alamgir",
+            "Knowledge without action is wastefulness and action without knowledge is foolishness. - Imam Al-Ghazali",
+            "To get what you love, you must first be patient with what you hate. - Imam Al-Ghazali",
+            "My heart is at ease knowing that what was meant for me will never miss me. - Imam Al-Shafi’i",
+            "Time is like a sword; if you do not cut it, it will cut you. - Imam Al-Shafi’i",
+            "Don’t depend on anyone in this world, because even your own shadow leaves you when you are in darkness. - Ibn Taymiyyah",
+            "What can my enemies do to me? My paradise is in my heart. - Ibn Taymiyyah",
+            "Width of life is more important than length of life. - Ibn Sina (Avicenna)",
+            "The world is a book and those who do not travel read only one page. - Ibn Battuta",
+            "Yesterday I was clever, so I wanted to change the world. Today I am wise, so I am changing myself. - Jalaluddin Rumi",
+            "What you seek is seeking you. - Jalaluddin Rumi",
+            "Raise your words, not your voice. It is rain that grows flowers, not thunder. - Jalaluddin Rumi",
+            "Elevate your self (Khudi) so high that before every decree, God Himself asks you: 'Tell me, what is your wish?' - Allama Iqbal",
+            "Nations are born in the hearts of poets, they prosper and die in the hands of politicians. - Allama Iqbal",
+            "If you don't stand for something you will fall for anything. - Malcolm X",
+            "Don't count the days, make the days count. - Muhammad Ali",
+            "I hated every minute of training, but I said, 'Don't quit. Suffer now and live the rest of your life as a champion.' - Muhammad Ali"
+        ];
+
+        // --- ICONS ---
+        const MOON_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`;
+        const SUN_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`;
+
+        // --- DOM ELEMENTS ---
+        const els = {
+            agreement: document.getElementById('agreement-screen'),
+            tracker: document.getElementById('tracker-screen'),
+            grid: document.getElementById('grid-container'),
+            date: document.getElementById('date-display'),
+            clock: document.getElementById('ist-clock'),
+            badge: document.getElementById('day-badge'),
+            sunday: document.getElementById('sunday-banner'),
+            bar: document.getElementById('progress-bar'),
+            pText: document.getElementById('progress-text'),
+            title: document.getElementById('main-title'),
+            note: document.getElementById('daily-note'),
+            saveMsg: document.getElementById('save-msg'),
+            themeBtn: document.getElementById('theme-toggle'),
+            calDrawer: document.getElementById('calendar-drawer'),
+            calContainer: document.getElementById('full-calendar-container'),
+            introQuote: document.getElementById('intro-quote'),
+            dailyQuote: document.getElementById('daily-quote'),
+            
+            // New Lock/Unlock Elements
+            lockContainer: document.getElementById('lock-container'),
+            lockMessage: document.getElementById('lock-message'),
+            countdownDisplay: document.getElementById('countdown-display'),
+            unlockPasswordInput: document.getElementById('unlock-password'),
+            passwordError: document.getElementById('password-error'),
+            startButton: document.getElementById('start-button')
+        };
+
+        // --- TIME UTILS ---
+        function getIndiaTime() {
+            const now = new Date();
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            return new Date(utc + (3600000 * 5.5));
+        }
+        function getIndiaDateStr() { return getIndiaTime().toISOString().split('T')[0]; }
+
+        // --- LOCK / UNLOCK CONFIGURATION ---
+        const SECRET_PASSWORD = "KALEX"; // Your secret password for early access
+        const MONDAY_LOCK_KEY = '90hard_is_locked_for_monday_start';
+        const UNLOCK_TIMESTAMP_KEY = '90hard_monday_unlock_timestamp';
+
+        // --- INIT ---
+        function init() {
+            initTheme();
+            updateClock();
+            setInterval(updateClock, 1000); // Update clock every second
+            setSequentialQuote();
+            
+            if (localStorage.getItem('90hard_started') === 'true') {
+                showTracker();
+            } else {
+                els.agreement.classList.remove('hidden');
+                els.tracker.classList.add('hidden');
+                checkLockStatus(); // Check if lockdown is active on load
+                setInterval(updateCountdown, 1000); // Start countdown timer
+            }
+        }
+
+        function calculateNextSundayUnlockTime() {
+            const now = getIndiaTime();
+            const currentDay = now.getDay(); // 0 for Sunday, 1 for Monday
+
+            let daysUntilNextSunday = (7 - currentDay) % 7;
+            if (daysUntilNextSunday === 0) { // If today is Sunday, we mean next Sunday
+                daysUntilNextSunday = 7;
+            }
+
+            const unlockTime = new Date(now.getTime());
+            unlockTime.setDate(now.getDate() + daysUntilNextSunday);
+            unlockTime.setHours(0, 1, 0, 0); // Set to 12:01 AM IST
+            
+            return unlockTime.getTime(); // Return timestamp
+        }
+
+        function checkLockStatus() {
+            const isLocked = localStorage.getItem(MONDAY_LOCK_KEY) === 'true';
+            const unlockTimestamp = parseInt(localStorage.getItem(UNLOCK_TIMESTAMP_KEY) || '0');
+            const now = getIndiaTime().getTime();
+
+            if (isLocked && now < unlockTimestamp) {
+                // Currently locked
+                els.startButton.disabled = true;
+                els.lockMessage.classList.remove('hidden');
+                els.countdownDisplay.classList.remove('hidden');
+                els.lockMessage.innerText = "Challenge locked until Sunday 12:01 AM IST.";
+                updateCountdown(); // Initial update
+            } else {
+                // Not locked, or lock expired
+                localStorage.removeItem(MONDAY_LOCK_KEY);
+                localStorage.removeItem(UNLOCK_TIMESTAMP_KEY);
+                els.startButton.disabled = false;
+                els.lockMessage.classList.add('hidden');
+                els.countdownDisplay.classList.add('hidden');
+                els.unlockPasswordInput.classList.add('hidden');
+                els.passwordError.classList.add('hidden');
+                // The "I Agree & Start" button is ready for a new attempt
+            }
+        }
+
+        function updateCountdown() {
+            const unlockTimestamp = parseInt(localStorage.getItem(UNLOCK_TIMESTAMP_KEY) || '0');
+            const now = getIndiaTime().getTime();
+
+            if (unlockTimestamp === 0 || now >= unlockTimestamp) {
+                // Unlock condition met or no lock set
+                checkLockStatus(); // This will clear the lock state if expired
+                return;
+            }
+
+            const timeLeft = unlockTimestamp - now;
+
+            const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+            els.countdownDisplay.innerText = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+        }
+
+        function handleStartAttempt() {
+            const now = getIndiaTime();
+            const currentDay = now.getDay(); // 0 = Sunday, 1 = Monday
+
+            if (localStorage.getItem(MONDAY_LOCK_KEY) === 'true') {
+                // If already under Monday lock, user must wait. No password option here.
+                els.passwordError.innerText = "Please wait for the challenge to unlock automatically.";
+                els.passwordError.classList.remove('hidden');
+                return;
+            }
+
+            if (currentDay === 1) { // It's Monday
+                // Initiate Monday lock
+                const unlockTime = calculateNextSundayUnlockTime();
+                localStorage.setItem(MONDAY_LOCK_KEY, 'true');
+                localStorage.setItem(UNLOCK_TIMESTAMP_KEY, unlockTime.toString());
+                
+                els.startButton.disabled = true;
+                els.lockMessage.innerText = "Starting challenge on a Monday is locked until next Sunday 12:01 AM IST.";
+                els.lockMessage.classList.remove('hidden');
+                els.countdownDisplay.classList.remove('hidden');
+                els.unlockPasswordInput.classList.add('hidden'); // Hide password input
+                els.passwordError.classList.add('hidden'); // Clear any password error
+                
+                updateCountdown(); // Start immediate countdown display
+            } else {
+                // Not Monday, offer password for early access
+                els.lockMessage.innerText = "It's not Monday. Enter password for early access.";
+                els.lockMessage.classList.remove('hidden');
+                els.countdownDisplay.classList.add('hidden');
+                els.unlockPasswordInput.classList.remove('hidden');
+                els.passwordError.classList.add('hidden'); // Clear previous errors
+                
+                // Change button action to password check
+                els.startButton.onclick = checkPasswordAndStart;
+                els.startButton.innerText = "Unlock & Start";
+            }
+        }
+
+        function checkPasswordAndStart() {
+            const enteredPass = els.unlockPasswordInput.value.trim();
+            if (enteredPass === SECRET_PASSWORD) {
+                els.passwordError.classList.add('hidden');
+                startChallenge(); // Proceed to start the challenge
+            } else {
+                els.passwordError.innerText = "Invalid password. Try again.";
+                els.passwordError.classList.remove('hidden');
+            }
+        }
+
+        // --- REST OF YOUR ORIGINAL FUNCTIONS ---
+
+        function setSequentialQuote() {
+            let currentIndex = parseInt(localStorage.getItem('90hard_quote_index') || '0');
+            if (currentIndex >= QUOTES.length || isNaN(currentIndex)) { currentIndex = 0; }
+            
+            const q = QUOTES[currentIndex];
+            if(els.introQuote) els.introQuote.innerText = q;
+            if(els.dailyQuote) els.dailyQuote.innerText = q;
+
+            let nextIndex = currentIndex + 1;
+            if (nextIndex >= QUOTES.length) { nextIndex = 0; }
+            localStorage.setItem('90hard_quote_index', nextIndex);
+        }
+
+        function triggerConfetti() {
+            if(typeof confetti !== 'undefined'){
+                confetti({ origin: { x: 0, y: 0.8 }, angle: 60, spread: 55, particleCount: 100, colors: ['#059669', '#000000', '#ffffff'] });
+                confetti({ origin: { x: 1, y: 0.8 }, angle: 120, spread: 55, particleCount: 100, colors: ['#059669', '#000000', '#ffffff'] });
+            }
+        }
+
+        function initTheme() {
+            const saved = localStorage.getItem('theme');
+            const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            setTheme((saved === 'dark' || (!saved && dark)) ? 'dark' : 'light');
+        }
+        function setTheme(mode) {
+            document.documentElement.setAttribute('data-theme', mode);
+            els.themeBtn.innerHTML = mode === 'dark' ? SUN_ICON : MOON_ICON;
+            localStorage.setItem('theme', mode);
+        }
+        els.themeBtn.onclick = () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            setTheme(current === 'dark' ? 'light' : 'dark');
+        };
+
+        // This is the function that officially starts the challenge after all checks
+        function startChallenge() {
+            localStorage.setItem('90hard_started', 'true');
+            localStorage.setItem('90hard_start_ts', getIndiaTime().getTime());
+            localStorage.setItem('90hard_last_date', getIndiaDateStr());
+            
+            // Clear any lingering lock states as challenge is now started
+            localStorage.removeItem(MONDAY_LOCK_KEY);
+            localStorage.removeItem(UNLOCK_TIMESTAMP_KEY);
+
+            showTracker();
+        }
+
+        function showTracker() {
+            els.agreement.classList.add('hidden');
+            els.tracker.classList.remove('hidden');
+            checkDailyReset();
+            renderGrid();
+            loadNote();
+            updateProgressBar(false); // don't confetti on load
+            renderCalendarAll(); 
+        }
+
+        function checkDailyReset() {
+            const lastDate = localStorage.getItem('90hard_last_date');
+            const today = getIndiaDateStr();
+            if (lastDate && lastDate !== today) {
+                saveHistory(lastDate);
+                TASKS.forEach((_, i) => localStorage.removeItem(`90hard_task_${i}`));
+                localStorage.removeItem('90hard_daily_note');
+                els.note.value = "";
+                localStorage.setItem('90hard_last_date', today);
+                calculateDay();
+                renderCalendarAll(); 
+            } else {
+                calculateDay();
+            }
+        }
+
+        function saveHistory(dateStr) {
+            let checked = 0;
+            TASKS.forEach((_, i) => { if(localStorage.getItem(`90hard_task_${i}`) === 'true') checked++; });
+            const percent = Math.round((checked / TASKS.length) * 100);
+            let history = JSON.parse(localStorage.getItem('90hard_history') || "{}");
+            history[dateStr] = percent;
+            localStorage.setItem('90hard_history', JSON.stringify(history));
+        }
+
+        function calculateDay() {
+            const startTs = localStorage.getItem('90hard_start_ts');
+            if (!startTs) return;
+            const diffTime = Math.abs(getIndiaTime().getTime() - parseInt(startTs));
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1; 
+            els.badge.innerText = `DAY ${diffDays} / 90`;
+            if (getIndiaTime().getDay() === 0) els.sunday.classList.remove('hidden');
+            else els.sunday.classList.add('hidden');
+        }
+
+        // --- SMART CALENDAR ---
+        function toggleCalendar() {
+            els.calDrawer.classList.toggle('open');
+            renderCalendarAll();
+        }
+
+        function renderCalendarAll() {
+            const currentYear = getIndiaTime().getFullYear();
+            const startTs = parseInt(localStorage.getItem('90hard_start_ts') || 0);
+            const startYear = new Date(startTs).getFullYear();
+            els.calContainer.innerHTML = ""; 
+            if (startYear === currentYear) { renderYear(currentYear); } 
+            else { renderYear(startYear); renderYear(currentYear); }
+        }
+
+        function renderYear(year) {
+            const history = JSON.parse(localStorage.getItem('90hard_history') || "{}");
+            const todayStr = getIndiaDateStr();
+            const startTs = parseInt(localStorage.getItem('90hard_start_ts') || 0);
+            const startDateStr = new Date(startTs).toISOString().split('T')[0];
+
+            const yearHeader = document.createElement('div');
+            yearHeader.className = 'year-header';
+            yearHeader.innerText = year;
+            els.calContainer.appendChild(yearHeader);
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'calendar-wrapper';
+            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+            for (let m = 0; m < 12; m++) {
+                const monthDiv = document.createElement('div');
+                monthDiv.className = 'cal-month';
+                const title = document.createElement('div');
+                title.className = 'cal-month-title';
+                title.innerText = monthNames[m];
+                monthDiv.appendChild(title);
+                const grid = document.createElement('div');
+                grid.className = 'cal-grid';
+                const daysInMonth = new Date(year, m + 1, 0).getDate();
+                
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const dayDiv = document.createElement('div');
+                    dayDiv.className = 'cal-day';
+                    dayDiv.innerText = d;
+                    const mStr = (m + 1).toString().padStart(2, '0');
+                    const dStr = d.toString().padStart(2, '0');
+                    const currentMapStr = `${year}-${mStr}-${dStr}`;
+
+                    if (currentMapStr === todayStr) { dayDiv.classList.add('today'); } 
+                    else if (history[currentMapStr] !== undefined) {
+                        if (history[currentMapStr] === 100) dayDiv.classList.add('success');
+                        else dayDiv.classList.add('fail');
+                    } else {
+                        if (currentMapStr < startDateStr) dayDiv.classList.add('past-inactive');
+                        else if (currentMapStr > todayStr) dayDiv.classList.add('future');
+                        else if (currentMapStr < todayStr) dayDiv.classList.add('fail'); 
+                    }
+                    grid.appendChild(dayDiv);
+                }
+                monthDiv.appendChild(grid);
+                wrapper.appendChild(monthDiv);
+            }
+            els.calContainer.appendChild(wrapper);
+        }
+
+        // --- TASKS & UTILS ---
+        function renderGrid() {
+            els.grid.innerHTML = ''; 
+            TASKS.forEach((task, index) => {
+                const isChecked = localStorage.getItem(`90hard_task_${index}`) === 'true';
+                const div = document.createElement('div');
+                div.className = isChecked ? 'task-item completed' : 'task-item';
+                div.innerHTML = `<input type="checkbox" ${isChecked ? 'checked' : ''}><label>${task}</label>`;
+                
+                const toggle = () => {
+                    const cb = div.querySelector('input');
+                    const newState = !cb.checked;
+                    cb.checked = newState;
+                    localStorage.setItem(`90hard_task_${index}`, newState);
+                    div.classList.toggle('completed', newState);
+                    updateProgressBar(true);
+                };
+
+                div.onclick = (e) => { if(e.target.tagName !== 'INPUT') toggle(); };
+                div.querySelector('input').onclick = (e) => {
+                    e.stopPropagation();
+                    localStorage.setItem(`90hard_task_${index}`, e.target.checked);
+                    div.classList.toggle('completed', e.target.checked);
+                    updateProgressBar(true);
+                };
+                els.grid.appendChild(div);
+            });
+        }
+
+        function updateProgressBar(allowConfetti) {
+            let checked = 0;
+            TASKS.forEach((_, i) => { if(localStorage.getItem(`90hard_task_${i}`) === 'true') checked++; });
+            const pct = Math.round((checked / TASKS.length) * 100);
+            els.bar.style.width = `${pct}%`;
+            els.pText.innerText = `${pct}% Completed`;
+            if (pct === 100) { 
+                els.title.innerText = `DAY COMPLETE ✅`; 
+                els.title.classList.add('finished'); 
+                if(allowConfetti) triggerConfetti();
+            } else { 
+                els.title.innerText = "90 HARD CHALLENGE"; 
+                els.title.classList.remove('finished'); 
+            }
+        }
+
+        function saveNote() {
+            localStorage.setItem('90hard_daily_note', els.note.value);
+            els.saveMsg.style.opacity = '1';
+            setTimeout(() => { els.saveMsg.style.opacity = '0'; }, 2000);
+        }
+        function loadNote() { els.note.value = localStorage.getItem('90hard_daily_note') || ""; }
+        function hardReset() { if(confirm("Reset progress to Day 1?")) { localStorage.clear(); location.reload(); } }
+        function updateClock() {
+            const now = getIndiaTime();
+            els.clock.innerText = "IST: " + now.toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
+            els.date.innerText = now.toLocaleDateString('en-US', {weekday:'long',year:'numeric',month:'short',day:'numeric'});
+        }
+
+        init();
+    </script>
+</body>
+</html>
